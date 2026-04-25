@@ -157,13 +157,14 @@ client.on("interactionCreate", async (interaction) => {
 
   if (interaction.commandName === 'clear') {
     try {
-      const botMessages = mensajes;
-
       const channel = interaction.channel;
 
-      const mensajes = await channel.messages.fetch({ limit: 100 });
+const mensajes = await channel.messages.fetch({ limit: 100 });
 
-      const botMessages = mensajes;
+// ✅ solo UNA declaración y bien hecha
+const botMessages = mensajes.filter(m => m.author.id === interaction.client.user.id);
+
+console.log("Mensajes del bot:", botMessages.size);
 
       console.log("Mensajes del bot:", botMessages.size);
 
