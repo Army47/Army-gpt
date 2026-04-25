@@ -9,7 +9,7 @@ const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const CANAL_CHAT_ID = "1497672368775237674";
 
-if (msg.channel.id !== CANAL_CHAT_ID) return;
+
 const CANAL_LOGS = "logs-armygpt";
 
 const client = new Client({
@@ -37,6 +37,8 @@ client.on("clientReady", () => {
 // 💬 MENSAJES
 // ======================
 client.on("messageCreate", async (msg) => {
+  if (msg.author.bot) return;
+  if (msg.channel.id !== CANAL_CHAT_ID) return;
   try {
     if (msg.author.bot) return;
     if (msg.channel.name !== CANAL_CHAT) return;
