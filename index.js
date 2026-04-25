@@ -8,8 +8,6 @@ require('dotenv').config();
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const CANAL_CHAT_ = "army-gpt";
-
-
 const CANAL_LOGS = "logs-armygpt";
 
 const client = new Client({
@@ -38,11 +36,9 @@ client.on("clientReady", () => {
 // ======================
 client.on("messageCreate", async (msg) => {
   if (msg.author.bot) return;
-  if (msg.channel.id !== CANAL_CHAT_ID) return;
+if (msg.channel.name !== CANAL_CHAT) return;
   try {
-    if (msg.author.bot) return;
-    if (msg.channel.name !== CANAL_CHAT) return;
-
+   
     const userId = msg.author.id;
     const ahora = Date.now();
 
@@ -149,7 +145,7 @@ client.on("interactionCreate", async (interaction) => {
       await interaction.editReply(respuesta);
 
     } catch (err) {
-      console.error("ERROR /ask:", err);
+      console.error("ERROR /ask:", err.response?.data || err.message);
 
       if (interaction.deferred || interaction.replied) {
         await interaction.editReply("❌ " + (err.response?.data?.error?.message || (err.response?.data?.error?.message || err.message)));
