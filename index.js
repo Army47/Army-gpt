@@ -5,7 +5,7 @@ const axios = require("axios");
 
 require('dotenv').config();
 
-const DISCORD_TOKEN = process.env.DISCORD_TOKEN";
+const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const CANAL_CHAT = "💻┃army-gpt";
 const CANAL_LOGS = "logs-armygpt";
