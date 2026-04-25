@@ -70,7 +70,7 @@ if (msg.channel.name !== CANAL_CHAT) return;
     const res = await axios.post(
       "https://openrouter.ai/api/v1/chat/completions",
       {
-        model: "meta-llama/llama-3-8b-instruct",
+        model: "openai/gpt-3.5-turbo",
         messages: historial
       },
       {
@@ -96,7 +96,7 @@ if (msg.channel.name !== CANAL_CHAT) return;
     }
 
   } catch (err) {
-    console.error("ERROR msg:", err);
+    console.error("ERROR msg:", err.response?.data || err.message);
     msg.reply("❌ Error.");
   }
 });
@@ -127,7 +127,7 @@ client.on("interactionCreate", async (interaction) => {
       const res = await axios.post(
         "https://openrouter.ai/api/v1/chat/completions",
         {
-          model: "meta-llama/llama-3-8b-instruct",
+          model: "openai/gpt-3.5-turbo",
           messages: [{ role: "user", content: pregunta }]
         },
         {
@@ -140,7 +140,12 @@ client.on("interactionCreate", async (interaction) => {
         }
       );
 
-      const respuesta = res.data.choices[0].message.content;
+      if (!res?.data?.choices?.[0]?.message?.content) {
+  console.log("Respuesta inválida:", res.data);
+  return msg.reply("⚠️ Error con la IA");
+}
+
+const respuesta = res.data.choices[0].message.content;
 
       await interaction.editReply(respuesta);
 
