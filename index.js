@@ -70,7 +70,7 @@ if (msg.channel.name !== CANAL_CHAT) return;
     const res = await axios.post(
       "https://openrouter.ai/api/v1/chat/completions",
       {
-        model: "openai/gpt-3.5-turbo",
+        model: "meta-llama/llama-3-8b-instruct",
         messages: historial
       },
       {
@@ -83,7 +83,12 @@ if (msg.channel.name !== CANAL_CHAT) return;
       }
     );
 
-    const respuesta = res.data.choices[0].message.content;
+    const respuesta = res?.data?.choices?.[0]?.message?.content;
+
+if (!respuesta) {
+  console.log("Respuesta inválida:", res.data);
+  return msg.reply("⚠️ Error con la IA");
+}
 
     historial.push({ role: "assistant", content: respuesta });
     memoria.set(userId, historial);
@@ -96,7 +101,9 @@ if (msg.channel.name !== CANAL_CHAT) return;
     }
 
   } catch (err) {
-    console.error("ERROR msg:", err.response?.data || err.message);
+    console.error("ERROR COMPLETO:");
+console.error(err.response?.data);
+console.error(err.message);
     msg.reply("❌ Error.");
   }
 });
@@ -127,7 +134,7 @@ client.on("interactionCreate", async (interaction) => {
       const res = await axios.post(
         "https://openrouter.ai/api/v1/chat/completions",
         {
-          model: "openai/gpt-3.5-turbo",
+          model: "meta-llama/llama-3-8b-instruct",
           messages: [{ role: "user", content: pregunta }]
         },
         {
@@ -142,10 +149,15 @@ client.on("interactionCreate", async (interaction) => {
 
       if (!res?.data?.choices?.[0]?.message?.content) {
   console.log("Respuesta inválida:", res.data);
-  return msg.reply("⚠️ Error con la IA");
+  return interaction.editReply("⚠️ Error con la IA");
 }
 
-const respuesta = res.data.choices[0].message.content;
+const respuesta = res?.data?.choices?.[0]?.message?.content;
+
+if (!respuesta) {
+  console.log("Respuesta inválida:", res.data);
+  return msg.reply("⚠️ Error con la IA");
+}
 
       await interaction.editReply(respuesta);
 
