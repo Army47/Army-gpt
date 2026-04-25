@@ -1,3 +1,4 @@
+console.log("VERSION NUEVA");
 const { Client, GatewayIntentBits } = require('discord.js');
 const axios = require("axios");
 
