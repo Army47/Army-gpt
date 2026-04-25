@@ -7,7 +7,7 @@ require('dotenv').config();
 
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-const CANAL_CHAT_ID = "1497672368775237674";
+const CANAL_CHAT_ = "army-gpt";
 
 
 const CANAL_LOGS = "logs-armygpt";
@@ -87,7 +87,7 @@ client.on("messageCreate", async (msg) => {
       }
     );
 
-    const respuesta = res.data.choices[0].message.content;
+    const respuesta = res.data.choices[0].msg.content;
 
     historial.push({ role: "assistant", content: respuesta });
     memoria.set(userId, historial);
@@ -144,7 +144,7 @@ client.on("interactionCreate", async (interaction) => {
         }
       );
 
-      const respuesta = res.data.choices[0].message.content;
+      const respuesta = res.data.choices[0].msg.content;
 
       await interaction.editReply(respuesta);
 
