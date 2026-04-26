@@ -1,4 +1,5 @@
-console.log("🔥 CODIGO NUEVO CARGADO");
+console.log("VERSION NUEVA FUNCIONANDO");
+
 const { Client, GatewayIntentBits } = require('discord.js');
 const axios = require("axios");
 
