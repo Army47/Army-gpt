@@ -1,16 +1,16 @@
-console.log("VERSION NUEVA");
 const { Client, GatewayIntentBits } = require('discord.js');
 const axios = require("axios");
 
-// 🔑 CONFIGURA
-
 require('dotenv').config();
 
+// 🔑 VARIABLES
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+
 const CANAL_CHAT = "army-gpt";
 const CANAL_LOGS = "logs-armygpt";
 
+// 🤖 CLIENTE
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -19,15 +19,16 @@ const client = new Client({
   ]
 });
 
-// 🧠 Memoria
+// 🧠 MEMORIA
 const memoria = new Map();
 
-// 🛡️ Anti-spam
+// 🛡️ ANTI-SPAM
 const controlSpam = new Map();
 const LIMITE = 10;
 const VENTANA = 60 * 60 * 1000;
 const BLOQUEO = 2 * 60 * 60 * 1000;
 
+// ✅ READY
 client.on("clientReady", () => {
   console.log(`✅ Bot listo como ${client.user.tag}`);
 });
@@ -36,13 +37,14 @@ client.on("clientReady", () => {
 // 💬 MENSAJES
 // ======================
 client.on("messageCreate", async (msg) => {
-  if (msg.author.bot) return;
-if (msg.channel.name !== CANAL_CHAT) return;
   try {
-   
+    if (msg.author.bot) return;
+    if (msg.channel.name !== CANAL_CHAT) return;
+
     const userId = msg.author.id;
     const ahora = Date.now();
 
+    // 🛡️ spam control
     if (!controlSpam.has(userId)) {
       controlSpam.set(userId, { mensajes: [], bloqueadoHasta: 0 });
     }
@@ -61,6 +63,7 @@ if (msg.channel.name !== CANAL_CHAT) return;
       return msg.reply("🚫 Límite superado.");
     }
 
+    // 🧠 memoria
     if (!memoria.has(userId)) memoria.set(userId, []);
     let historial = memoria.get(userId);
 
@@ -68,10 +71,11 @@ if (msg.channel.name !== CANAL_CHAT) return;
 
     historial.push({ role: "user", content: msg.content });
 
+    // 🤖 IA
     const res = await axios.post(
       "https://openrouter.ai/api/v1/chat/completions",
       {
-        model: "meta-llama/llama-3-8b-instruct",
+        model: "openai/gpt-3.5-turbo",
         messages: historial
       },
       {
@@ -84,27 +88,28 @@ if (msg.channel.name !== CANAL_CHAT) return;
       }
     );
 
-    const respuesta = res?.data?.choices?.[0]?.message?.content;
+    // ⚠️ VALIDACIÓN (EVITA CRASH)
+    if (!res?.data?.choices?.[0]?.message?.content) {
+      console.log("Respuesta inválida:", res.data);
+      return msg.reply("⚠️ Error con la IA");
+    }
 
-if (!respuesta) {
-  console.log("Respuesta inválida:", res.data);
-  return msg.reply("⚠️ Error con la IA");
-}
+    const respuesta = res.data.choices[0].message.content;
 
     historial.push({ role: "assistant", content: respuesta });
     memoria.set(userId, historial);
 
     await msg.reply(respuesta);
 
+    // 📜 LOGS
     const log = msg.guild.channels.cache.find(c => c.name === CANAL_LOGS);
     if (log) {
       log.send(`👤 ${msg.author.tag}\n💬 ${msg.content}\n🤖 ${respuesta}`);
     }
 
   } catch (err) {
-    console.error("ERROR COMPLETO:");
-console.error(err.response?.data);
-console.error(err.message);
+    console.error("ERROR COMPLETO:", err);
+    console.error("ERROR DATA:", err.response?.data || err.message);
     msg.reply("❌ Error.");
   }
 });
@@ -115,27 +120,16 @@ console.error(err.message);
 client.on("interactionCreate", async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
-  const userId = interaction.user.id;
-
   if (interaction.commandName === 'ask') {
     try {
       const pregunta = interaction.options.getString('pregunta');
-      const preguntaLower = pregunta.toLowerCase();
 
-      if (
-        preguntaLower.includes("quien te creo") ||
-        preguntaLower.includes("quien es tu creador") ||
-        preguntaLower.includes("de quien eres") ||
-        preguntaLower.includes("quien te hizo")
-      ) {
-        return interaction.editReply("👑 Mi creador es Army");
-      }
       await interaction.deferReply();
 
       const res = await axios.post(
         "https://openrouter.ai/api/v1/chat/completions",
         {
-          model: "meta-llama/llama-3-8b-instruct",
+          model: "openai/gpt-3.5-turbo",
           messages: [{ role: "user", content: pregunta }]
         },
         {
@@ -149,16 +143,11 @@ client.on("interactionCreate", async (interaction) => {
       );
 
       if (!res?.data?.choices?.[0]?.message?.content) {
-  console.log("Respuesta inválida:", res.data);
-  return interaction.editReply("⚠️ Error con la IA");
-}
+        console.log("Respuesta inválida:", res.data);
+        return interaction.editReply("⚠️ Error con la IA");
+      }
 
-const respuesta = res?.data?.choices?.[0]?.message?.content;
-
-if (!respuesta) {
-  console.log("Respuesta inválida:", res.data);
-  return msg.reply("⚠️ Error con la IA");
-}
+      const respuesta = res.data.choices[0].message.content;
 
       await interaction.editReply(respuesta);
 
@@ -166,60 +155,49 @@ if (!respuesta) {
       console.error("ERROR /ask:", err.response?.data || err.message);
 
       if (interaction.deferred || interaction.replied) {
-        await interaction.editReply("❌ " + (err.response?.data?.error?.message || (err.response?.data?.error?.message || err.message)));
+        await interaction.editReply("❌ Error");
       } else {
-        await interaction.reply("❌ " + (err.response?.data?.error?.message || err.message));
+        await interaction.reply("❌ Error");
       }
     }
   }
 
   if (interaction.commandName === 'clear') {
     try {
-      const channel = interaction.channel;
+      await interaction.deferReply();
 
-const mensajes = await channel.messages.fetch({ limit: 100 });
-
-// ✅ solo UNA declaración y bien hecha
-const botMessages = mensajes.filter(m => m.author.id === interaction.client.user.id);
-
-console.log("Mensajes del bot:", botMessages.size);
-
-      console.log("Mensajes del bot:", botMessages.size);
+      const mensajes = await interaction.channel.messages.fetch({ limit: 100 });
+      const botMessages = mensajes.filter(m => m.author.id === interaction.client.user.id);
 
       if (botMessages.size === 0) {
-        return interaction.editReply("⚠️ No hay mensajes del bot para borrar");
+        return interaction.editReply("⚠️ No hay mensajes del bot");
       }
 
-      await channel.bulkDelete(botMessages.map(m => m), true);
+      await interaction.channel.bulkDelete(botMessages, true);
 
       await interaction.editReply("✅ Mensajes borrados");
 
     } catch (err) {
       console.error("ERROR /clear:", err);
-
-      if (interaction.deferred || interaction.replied) {
-        await interaction.editReply("❌ Error al borrar mensajes");
-      } else {
-        await interaction.reply("❌ Error al borrar mensajes");
-      }
+      await interaction.editReply("❌ Error");
     }
   }
 
   if (interaction.commandName === 'clearlogs') {
-  const canal = interaction.guild.channels.cache.find(c => c.name === CANAL_LOGS);
-  if (!canal) return interaction.reply("❌ Canal no encontrado.");
+    const canal = interaction.guild.channels.cache.find(c => c.name === CANAL_LOGS);
+    if (!canal) return interaction.reply("❌ Canal no encontrado.");
 
-  const mensajes = await canal.messages.fetch({ limit: 100 });
-  await canal.bulkDelete(mensajes, true);
+    const mensajes = await canal.messages.fetch({ limit: 100 });
+    await canal.bulkDelete(mensajes, true);
 
-  return interaction.reply("🗑️ Logs borrados.");
-}
+    return interaction.reply("🗑️ Logs borrados.");
+  }
 
-if (interaction.commandName === 'imagen') {
-  const prompt = interaction.options.getString('prompt');
-  return interaction.reply(`🖼️ (modo gratis)\nPrompt: ${prompt}`);
-}
+  if (interaction.commandName === 'imagen') {
+    const prompt = interaction.options.getString('prompt');
+    return interaction.reply(`🖼️ Prompt: ${prompt}`);
+  }
 });
 
+// 🚀 LOGIN
 client.login(DISCORD_TOKEN);
-model: "..."
