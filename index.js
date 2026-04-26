@@ -1,12 +1,11 @@
+console.log("🔥 CODIGO NUEVO CARGADO");
 const { Client, GatewayIntentBits } = require('discord.js');
 const axios = require("axios");
 
 require('dotenv').config();
 
-// 🔑 VARIABLES
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-
 const CANAL_CHAT = "army-gpt";
 const CANAL_LOGS = "logs-armygpt";
 
@@ -29,7 +28,7 @@ const VENTANA = 60 * 60 * 1000;
 const BLOQUEO = 2 * 60 * 60 * 1000;
 
 // ✅ READY
-client.on("clientReady", () => {
+client.once("ready", () => {
   console.log(`✅ Bot listo como ${client.user.tag}`);
 });
 
